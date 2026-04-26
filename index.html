@@ -708,20 +708,18 @@
     }
 
     // --- NEW HELPER FOR CALCULATION ---
-    function calculateTotal(itemsArray) {
-        if (!itemsArray || !Array.isArray(itemsArray)) return 0;
-        return itemsArray.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+    function calculateDOMTotal(bodyId) {
+        return Array.from(document.querySelectorAll(`#${bodyId} tr`)).reduce((sum, row) => {
+            const amountInput = row.querySelector('input[type="number"]');
+            return sum + (amountInput ? parseFloat(amountInput.value) || 0 : 0);
+        }, 0);
     }
 
-    // --- REFACTORED PURE DATA-DRIVEN CALCULATE ---
     function calculate() {
-        // Source of truth is now the data object, not the DOM selectors
-        const data = budgets[currentMonth] || {};
-        
-        const totalIncome = calculateTotal(data.income);
-        const totalFixed = calculateTotal(data.fixed);
-        const totalSemiFixed = calculateTotal(data.semFixed);
-        const totalExtra = calculateTotal(data.extra);
+        const totalIncome = calculateDOMTotal('incomeBody');
+        const totalFixed = calculateDOMTotal('fixedBody');
+        const totalSemiFixed = calculateDOMTotal('semiFixedBody');
+        const totalExtra = calculateDOMTotal('extraBody');
 
         // Update DOM elements with results
         document.getElementById('totalIncome').textContent = '$' + totalIncome.toFixed(2);
@@ -1102,7 +1100,7 @@
 
         // 3. Keep Input Listener for real-time text/number updates (auto-save and calc)
         container.addEventListener('input', (e) => {
-            if (e.target.matches('input:not([type="checkbox"]), select')) {
+            if (e.target.matches('input:not([type="checkbox"]), select:not(#importMonth)')) {
                 const cardSection = e.target.closest('.credit-card-section');
                 if (cardSection) {
                     updateCardOnInputChange(cardSection);
